@@ -51,7 +51,6 @@ class OAuthClient:
             user_id = params.get('douban_user_id',[None])[0]
             return token.key,token.secret, user_id
         except:
-            print r
             return None,None,None
 
     def get_request_token(self):
@@ -73,7 +72,7 @@ class OAuthClient:
         oauth_request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, 
                 token=token, http_url=ACCESS_TOKEN_URL)
         oauth_request.sign_request(signature_method, self.consumer, token)
-        return self.fetch_token(oauth_request)[:2]
+        return self.fetch_token(oauth_request)[:3]
  
     def get_auth_header(self, method, uri, parameter={}):
         if self.token:
