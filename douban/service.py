@@ -5,7 +5,8 @@ import gdata
 import gdata.service
 import douban
 import urllib
-import oauth, client
+import oauth
+import client
 
 class DoubanService(gdata.service.GDataService):
     def __init__(self, api_key=None, secret=None,
