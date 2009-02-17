@@ -1,0 +1,13 @@
+{% block authenticated_accounts %}
+<ul id="authenticated-douban-accounts">
+    {% for account in accounts %}
+    <li class="douban-user">
+        <div class="douban-user-picture"></div>
+        <div class="douban-user-bio">
+            DoubanID:
+            <span class="douban-user-id">{{ account.douban_id }}</span><br />
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
