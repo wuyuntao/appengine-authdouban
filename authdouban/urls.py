@@ -4,9 +4,8 @@ from views import *
 
 urlpatterns = (
     (r'^/authdouban/$', AuthAccount),
-    (r'^/authdouban/request/$', AuthRequest),
-    (r'^/authdouban/access/$', AuthAccess),
+    (r'^/authdouban/authorize/$', AuthRequest),
     (r'^/authdouban/complete/$', AuthComplete),
     (r'^/authdouban/failure/$', AuthFailure),
-    (r'^/authdouban/delete/$', AuthDelete),
+    (r'^/authdouban/delete/(.*)/$', AuthDelete),
 )
