@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import urllib
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
@@ -59,7 +60,7 @@ class AuthComplete(webapp.RequestHandler):
         account = DoubanAccount.all().filter('request_key = ', request_key).get()
 
         if not account or account.request_key == 'ALREADY_AUTHENTICATED':
-            reason = u'Request Key 不正确'
+            reason = urllib.quote_plus('Request Key 不正确')
             return self.redirect('/authdouban/failure/?reason=%s' % reason)
 
         service = douban_service()
