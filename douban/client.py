@@ -1,10 +1,8 @@
 # -*- encoding:utf-8 -*-
 
-import cgi
+import httplib,urlparse,cgi
 import time
 import oauth
-import urlparse
-from google.appengine.api import urlfetch
 
 signature_method = oauth.OAuthSignatureMethod_HMAC_SHA1()
 
@@ -42,9 +40,11 @@ class OAuthClient:
             return False
 
     def fetch_token(self, oauth_request):
-        url = oauth_request.http_url
-        response = urlfetch.fetch(url, headers=oauth_request.to_header())
-        r = response.content
+        connection = httplib.HTTPConnection("%s:%d" % (self.server, 80))
+        connection.request('GET', urlparse.urlparse(oauth_request.http_url).path,
+            headers=oauth_request.to_header())
+        response = connection.getresponse()
+        r = response.read()
         try:
             token = oauth.OAuthToken.from_string(r)
             params = cgi.parse_qs(r, keep_blank_values=False)
@@ -92,8 +92,10 @@ class OAuthClient:
         headers = oauth_request.to_header()
         if method in ('POST','PUT'):
             headers['Content-Type'] = 'application/atom+xml; charset=utf-8'
-        response = urlfetch.fetch(url, payload=body, method=method, headers=headers)
-        return response.content
+        connection = httplib.HTTPConnection("%s:%d" % (self.server, 80))
+        connection.request(method, url, body=body,
+            headers=headers)
+        return connection.getresponse()
 
 
 def test():
