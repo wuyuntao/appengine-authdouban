@@ -35,7 +35,7 @@ class AuthRequest(webapp.RequestHandler):
     向豆瓣请求 request key，将其保存到数据库之后，返回用户的授权链接
 
     """
-    def get(self, template_name='templates/authdouban/create_account.html'):
+    def get(self):
         service = douban_service()
         key, secret = service.client.get_request_token()
 
