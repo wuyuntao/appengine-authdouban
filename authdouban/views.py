@@ -15,9 +15,21 @@ def douban_service():
                             secret=settings.DOUBAN_API_SECRET)
     return run_on_appengine(service)
 
-def render_to_response(template_name, context={}):
+def render_to_response(handler, template_name, extra_context={}):
     path = os.path.join(os.path.dirname(__file__), template_name)
-    return template.render(path, context)
+    context = {
+        'login_url': users.create_login_url('/'),
+    }
+    user = users.get_current_user()
+    if user:
+        context.update({
+            'user': user.nickname(),
+            'email': user.email(),
+            'logout_url': users.create_logout_url('/'),
+        })
+    if extra_context:
+        context.update(extra_context)
+    return handler.response.out.write(template.render(path, context))
 
 class AuthAccount(webapp.RequestHandler):
     """
@@ -27,7 +39,7 @@ class AuthAccount(webapp.RequestHandler):
     def get(self, template_name='templates/authdouban/list_account.html'):
         user = users.get_current_user()
         accounts = DoubanAccount.get_authenticated_accounts(user=user)
-        return self.response.out.write(render_to_response(template_name, { 'accounts': accounts }))
+        return render_to_response(self, template_name, { 'douban_accounts': accounts })
 
 class AuthRequest(webapp.RequestHandler):
     """
@@ -54,7 +66,7 @@ class AuthComplete(webapp.RequestHandler):
     如果验证失败，重定向到授权失败页面
 
     """
-    def get(self, template_name='templates/authdouban/authentication_complete.html'):
+    def get(self, template_name='templates/authdouban/complete.html'):
         request_key = self.request.get('oauth_token')
         account = DoubanAccount.all().filter('request_key = ', request_key).get()
 
@@ -69,7 +81,7 @@ class AuthComplete(webapp.RequestHandler):
             if settings.STORE_DOUBAN_PROFILE:
                 entry = service.GetPeople('/people/%s' % douban_id)
                 profile = DoubanProfile.insert_or_update(entry)
-            return self.response.out.write(render_to_response(template_name, { 'account': account }))
+            return render_to_response(self, template_name, { 'douban_account': account })
         else:
             return self.redirect('/authdouban/failure/')
 
@@ -78,9 +90,9 @@ class AuthFailure(webapp.RequestHandler):
     用户授权失败页面
 
     """
-    def get(self, template_name='templates/authdouban/authentication_failure.html'):
+    def get(self, template_name='templates/authdouban/failure.html'):
         reason = self.request.get('reason')
-        return self.response.out.write(render_to_response(template_name, { 'reason': reason }))
+        return render_to_response(self, template_name, { 'reason': reason })
 
 class AuthDelete(webapp.RequestHandler):
     """
@@ -88,7 +100,10 @@ class AuthDelete(webapp.RequestHandler):
 
     """
     def get(self, key, template_name='templates/authdouban/delete_account.html'):
-        return self.response.out.write(render_to_response(template_name, { 'douban_id': DoubanAccount.get(key).douban_id }))
+        context = {
+            'douban_account': DoubanAccount.get(key),
+        }
+        return render_to_response(self, template_name, context)
 
     def post(self, key):
         DoubanAccount.get(key).delete()
