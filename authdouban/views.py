@@ -8,7 +8,7 @@ from google.appengine.ext.webapp import template
 from gdata.alt.appengine import run_on_appengine
 from douban.service import DoubanService
 import settings
-from models import DoubanAccount
+from models import DoubanAccount, DoubanProfile
 
 def douban_service():
     service = DoubanService(api_key=settings.DOUBAN_API_KEY,
@@ -40,8 +40,7 @@ class AuthRequest(webapp.RequestHandler):
         key, secret = service.client.get_request_token()
 
         user = users.get_current_user()
-        new_account = DoubanAccount(user=user)
-        new_account.set_request_key(key, secret)
+        new_account = DoubanAccount.create_unauthorized_account(user, key, secret)
 
         callback_url = 'http://%s/authdouban/complete/' % self.request.host 
         auth_url = service.client.get_authorization_url(key, secret, callback_url)
@@ -67,7 +66,10 @@ class AuthComplete(webapp.RequestHandler):
         key, secret, douban_id = service.client.get_access_token(account.request_key, account.request_secret)
         if key and secret and douban_id:
             account.set_access_key(key, secret, douban_id)
-            return self.response.out.write(render_to_response(template_name, { 'douban_id': douban_id }))
+            if settings.STORE_DOUBAN_PROFILE:
+                entry = service.GetPeople('/people/%s' % douban_id)
+                profile = DoubanProfile.insert_or_update(entry)
+            return self.response.out.write(render_to_response(template_name, { 'account': account }))
         else:
             return self.redirect('/authdouban/failure/')
 
