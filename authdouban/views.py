@@ -31,7 +31,7 @@ def render_to_response(handler, template_name, extra_context={}):
         context.update(extra_context)
     return handler.response.out.write(template.render(path, context))
 
-class AuthAccount(webapp.RequestHandler):
+class ListAccounts(webapp.RequestHandler):
     """
     列出已授权帐户
 
@@ -41,7 +41,7 @@ class AuthAccount(webapp.RequestHandler):
         accounts = DoubanAccount.get_authenticated_accounts(user=user)
         return render_to_response(self, template_name, { 'douban_accounts': accounts })
 
-class AuthRequest(webapp.RequestHandler):
+class AuthorizeAccount(webapp.RequestHandler):
     """
     新建一个豆瓣授权帐户。
     向豆瓣请求 request key，将其保存到数据库之后，返回用户的授权链接
@@ -54,11 +54,11 @@ class AuthRequest(webapp.RequestHandler):
         user = users.get_current_user()
         new_account = DoubanAccount.create_unauthorized_account(user, key, secret)
 
-        callback_url = 'http://%s/authdouban/complete/' % self.request.host 
+        callback_url = 'http://%s/account/douban/authorize/complete/' % self.request.host
         auth_url = service.client.get_authorization_url(key, secret, callback_url)
         return self.redirect(auth_url)
 
-class AuthComplete(webapp.RequestHandler):
+class AuthorizationComplete(webapp.RequestHandler):
     """
     用户完成授权后的回调，向豆瓣请求 access key
     如果经验证 access key 可以用来访问豆瓣，将其保存到数据库
@@ -72,7 +72,7 @@ class AuthComplete(webapp.RequestHandler):
 
         if not account or account.request_key == 'ALREADY_AUTHENTICATED':
             reason = urllib.quote_plus('Request Key 不正确')
-            return self.redirect('/authdouban/failure/?reason=%s' % reason)
+            return self.redirect('/account/douban/authorize/failure/?reason=%s' % reason)
 
         service = douban_service()
         key, secret, douban_id = service.client.get_access_token(account.request_key, account.request_secret)
@@ -83,9 +83,10 @@ class AuthComplete(webapp.RequestHandler):
                 profile = DoubanProfile.insert_or_update(entry)
             return render_to_response(self, template_name, { 'douban_account': account })
         else:
-            return self.redirect('/authdouban/failure/')
+            reason = urllib.quote_plus('获取 Access Key 失败')
+            return self.redirect('/account/douban/authorize/failure/?reason=%s' % reason)
 
-class AuthFailure(webapp.RequestHandler):
+class AuthorizationFailure(webapp.RequestHandler):
     """
     用户授权失败页面
 
@@ -94,7 +95,7 @@ class AuthFailure(webapp.RequestHandler):
         reason = self.request.get('reason')
         return render_to_response(self, template_name, { 'reason': reason })
 
-class AuthDelete(webapp.RequestHandler):
+class DeleteAccount(webapp.RequestHandler):
     """
     删除已授权帐户
 
@@ -107,4 +108,4 @@ class AuthDelete(webapp.RequestHandler):
 
     def post(self, key):
         DoubanAccount.get(key).delete()
-        return self.redirect('/authdouban/')
+        return self.redirect('/account/douban/')
