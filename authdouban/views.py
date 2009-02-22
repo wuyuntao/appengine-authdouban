@@ -5,15 +5,9 @@ import urllib
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
-from gdata.alt.appengine import run_on_appengine
-from douban.service import DoubanService
 import settings
 from models import DoubanAccount, DoubanProfile
-
-def douban_service():
-    service = DoubanService(api_key=settings.DOUBAN_API_KEY,
-                            secret=settings.DOUBAN_API_SECRET)
-    return run_on_appengine(service)
+from utils import douban_service
 
 def render_to_response(handler, template_name, extra_context={}):
     path = os.path.join(os.path.dirname(__file__), template_name)

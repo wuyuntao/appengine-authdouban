@@ -1,5 +1,14 @@
 # -*- coding: UTF-8 -*-
 
+from gdata.alt.appengine import run_on_appengine
+from douban.service import DoubanService
+import settings
+
+def douban_service():
+    service = DoubanService(api_key=settings.DOUBAN_API_KEY, \
+                            secret=settings.DOUBAN_API_SECRET)
+    return run_on_appengine(service)
+
 def parse_urls(people_entry):
     url = None
     image_url = None

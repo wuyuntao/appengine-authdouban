@@ -1,8 +1,9 @@
 # -*- coding: UTF-8 -*-
 
+from datetime import datetime, timedelta
 from google.appengine.ext import db
 import settings
-from utils import parse_urls, parse_id, force_unicode as u
+from utils import douban_service, parse_urls, parse_id, force_unicode as u
 
 class DoubanAccount(db.Model):
     """
@@ -38,8 +39,18 @@ class DoubanAccount(db.Model):
         return query
 
     def get_douban_profile(self):
-        """ 获取相应的豆瓣用户档案 """
-        return DoubanProfile.get_by_douban_id(self.douban_id)
+        """ 获取相应的豆瓣用户档案
+            如果超过了缓存的有效时限，更新档案
+
+        """
+        profile = DoubanProfile.get_by_douban_id(self.douban_id)
+        if profile.need_update():
+            service = douban_service()
+            # GData 不太支持 Unicode
+            entry = service.GetPeople('/people/%s' % \
+                                      self.douban_id.encode('utf-8'))
+            profile.update(entry)
+        return profile
     douban_profile = property(get_douban_profile)
 
     def set_request_key(self, key, secret):
@@ -126,3 +137,8 @@ class DoubanProfile(db.Model):
         self.image_url = image_url
         self.blog_url = blog_url
         self.put()
+
+    def need_update(self):
+        """ 检查用户档案是否超过了缓存的有效时限 """
+        return datetime.now() - self.updated > \
+                        timedelta(hours=settings.MAX_CACHE_TIME)
