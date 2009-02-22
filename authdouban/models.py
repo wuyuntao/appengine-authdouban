@@ -2,6 +2,7 @@
 
 from google.appengine.ext import db
 import settings
+from utils import parse_urls, parse_id, force_unicode as u
 
 class DoubanAccount(db.Model):
     """
@@ -82,7 +83,7 @@ class DoubanProfile(db.Model):
     @classmethod
     def insert_or_update(cls, people_entry):
         """ 新建或者更新用户档案 """
-        profile = cls.get_by_douban_id(cls._parse_id(people_entry))
+        profile = cls.get_by_douban_id(parse_id(people_entry))
         if profile is None:
             profile = cls.insert(people_entry)
         else:
@@ -92,12 +93,12 @@ class DoubanProfile(db.Model):
     @classmethod
     def insert(cls, people_entry):
         """ 新建用户档案 """
-        url, image_url, blog_url = cls._parse_urls(people_entry)
-        new_profile = DoubanProfile(douban_id=cls._parse_id(people_entry), \
-                                    user_name=people_entry.uid.text, \
-                                    screen_name=people_entry.title.text, \
-                                    location=people_entry.location.text, \
-                                    content=people_entry.content.text, \
+        url, image_url, blog_url = parse_urls(people_entry)
+        new_profile = DoubanProfile(douban_id=parse_id(people_entry), \
+                                    user_name=u(people_entry.uid.text), \
+                                    screen_name=u(people_entry.title.text), \
+                                    location=u(people_entry.location.text), \
+                                    content=u(people_entry.content.text), \
                                     url=url, \
                                     image_url=image_url, \
                                     blog_url=blog_url)
@@ -106,32 +107,12 @@ class DoubanProfile(db.Model):
 
     def update(self, people_entry):
         """ 更新用户档案 """
-        url, image_url, blog_url = self._parse_urls(people_entry)
-        self.user_name = people_entry.uid.text
-        self.screen_name = people_entry.title.text
-        self.location = people_entry.location.text
-        self.content = people_entry.content.text
+        url, image_url, blog_url = parse_urls(people_entry)
+        self.user_name = u(people_entry.uid.text)
+        self.screen_name = u(people_entry.title.text)
+        self.location = u(people_entry.location.text)
+        self.content = u(people_entry.content.text)
         self.url = url
         self.image_url = image_url
         self.blog_url = blog_url
         self.put()
-
-    @staticmethod
-    def _parse_urls(people_entry):
-        url = None
-        image_url = None
-        blog_url = None
-
-        for link in people_entry.link:
-            if link.rel == 'alternate':
-                url = link.href
-            elif link.rel == 'icon':
-                image_url = link.href
-            elif link.rel == 'homepage':
-                blog_url = link.href
-
-        return url, image_url, blog_url
-
-    @staticmethod
-    def _parse_id(people_entry):
-        return people_entry.id.text.split('/')[4]
