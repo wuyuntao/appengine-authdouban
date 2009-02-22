@@ -57,6 +57,16 @@ class DoubanAccount(db.Model):
         self.request_secret = 'ALREADY_AUTHENTICATED'
         self.put()
 
+    def remove_duplicate_accounts(self):
+        """ 删除重复的授权帐户 """
+        accounts = self.all() \
+                       .filter('user = ', self.user) \
+                       .filter('douban_id = ', self.douban_id) \
+                       .filter('__key__ != ', self.key()) \
+                       .fetch(1000)
+        for account in accounts:
+            account.delete()
+
 
 class DoubanProfile(db.Model):
     """
