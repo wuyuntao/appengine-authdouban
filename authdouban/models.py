@@ -69,14 +69,26 @@ class DoubanAccount(db.Model):
         self.put()
 
     def remove_duplicate_accounts(self):
-        """ 删除重复的授权帐户 """
+        """ 删除 ID 重复的授权帐户 """
         accounts = self.all() \
                        .filter('user = ', self.user) \
-                       .filter('douban_id = ', self.douban_id) \
+                       .filter('request_key = ', 'ALREADY_AUTHENTICATED') \
                        .filter('__key__ != ', self.key()) \
+                       .filter('douban_id = ', self.douban_id) \
                        .fetch(1000)
         for account in accounts:
             account.delete()
+
+    def remove_old_accounts(self):
+        """ 删除超过保存限制的最早的授权帐户 """
+        if settings.MAX_STORED_ACCOUNTS > 0:
+            accounts = self.all() \
+                           .filter('user = ', self.user) \
+                           .filter('request_key = ', 'ALREADY_AUTHENTICATED') \
+                           .order('-created') \
+                           .fetch(1000, offset=settings.MAX_STORED_ACCOUNTS)
+            for account in accounts:
+                account.delete()
 
 
 class DoubanProfile(db.Model):
@@ -140,5 +152,8 @@ class DoubanProfile(db.Model):
 
     def need_update(self):
         """ 检查用户档案是否超过了缓存的有效时限 """
-        return datetime.now() - self.updated > \
-                        timedelta(hours=settings.MAX_CACHE_TIME)
+        if settings.MAX_CACHE_TIME > 0:
+            return datetime.now() - self.updated > \
+                            timedelta(hours=settings.MAX_CACHE_TIME)
+        else:
+            return False

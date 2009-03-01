@@ -73,6 +73,7 @@ class AuthorizationComplete(webapp.RequestHandler):
         if key and secret and douban_id:
             account.set_access_key(key, secret, douban_id)
             account.remove_duplicate_accounts()
+            account.remove_old_accounts()
             if settings.STORE_DOUBAN_PROFILE:
                 entry = service.GetPeople('/people/%s' % douban_id)
                 profile = DoubanProfile.insert_or_update(entry)
