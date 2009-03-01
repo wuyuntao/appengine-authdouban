@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block delete_account %}
+<div class="delete-account">
+
+    <div class="title">
+        <h3>你确定要注销这个豆瓣帐号的授权吗？</h3>
+    </div>
+
+    {% include 'douban_user_no_delete.html' %}
+
+    <div class="douban-user-delete-form">
+        <form id="douban-user-delete-form" method="POST" action=".">
+            <div class="douban-user-delete-confirm">
+                <input type="submit" name="yes" value="是的，我确定要注销这个豆瓣帐号的授权"></input>
+            </div>
+            <div class="last douban-user-delete-cancel">
+                <input type="button" name="no" value="撤销"></input>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

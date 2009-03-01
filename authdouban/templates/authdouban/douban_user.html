@@ -1,0 +1,27 @@
+<div class="douban-user">
+    <div class="douban-user-picture">
+        <img class="douban-user-picture" src="{{ douban_account.douban_profile.image_url }}" alt="{{ douban_account.douban_profile.screen_name }}"></img>
+    </div>
+
+    <div class="douban-user-bio">
+        <div class="douban-user-id">
+            Douban ID:
+            <span class="douban-user-id">{{ douban_account.douban_id }}</span>
+        </div>
+
+        <div class="douban-user-name">
+            <b><a href="{{ douban_account.douban_profile.url }}" class="douban-user-url">{{ douban_account.douban_profile.screen_name }}</a></b>
+            {% if douban_account.douban_profile.location %} &nbsp; 
+            <span class="douban-user-city">{{ douban_account.douban_profile.location }}</span>
+            {% endif %}
+        </div>
+
+        {% block douban_user_delete %}
+        {% if douban_account %}
+        <div class="douban-user-delete">
+            <a href="/account/douban/delete/{{ douban_account.key }}/" class="douban-user-delete">删除帐号</a>
+        </div>
+        {% endif %}
+        {% endblock %}
+    </div>
+</div>

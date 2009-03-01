@@ -1,13 +1,16 @@
-{% block authenticated_accounts %}
-<ul id="authenticated-douban-accounts">
-    {% for account in accounts %}
-    <li class="douban-user">
-        <div class="douban-user-picture"></div>
-        <div class="douban-user-bio">
-            DoubanID:
-            <span class="douban-user-id">{{ account.douban_id }}</span><br />
-        </div>
-    </li>
+{% extends 'base.html' %}
+
+{% block list_account %}
+<div class="account-list">
+    {% if not douban_accounts %}
+    <div class="no-account">
+        你还没有任何豆瓣授权帐号。
+        <a href="/account/douban/authorize/">猛击这里授权你的豆瓣帐号</a>
+    </div>
+    {% endif %}
+
+    {% for douban_account in douban_accounts %}
+        {% include 'douban_user.html' %}
     {% endfor %}
-</ul>
+</div>
 {% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block main %}
+<div class="authentication-failure">
+    <div class="title">
+        <h3>授权失败</h4>
+    </div>
+
+    {% if reason %}
+    <div class="reason">
+        原因：{{ reason }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
