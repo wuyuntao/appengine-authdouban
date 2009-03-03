@@ -96,12 +96,17 @@ class DeleteAccount(webapp.RequestHandler):
     删除已授权帐户
 
     """
-    def get(self, key, template_name='templates/authdouban/delete_account.html'):
+    def get(self, douban_id, template_name='templates/authdouban/delete_account.html'):
+        user = users.get_current_user()
+        account = DoubanAccount.get_authenticated_accounts(user, douban_id)
         context = {
-            'douban_account': DoubanAccount.get(key),
+            'douban_id': douban_id,
+            'douban_account': account,
         }
         return render_to_response(self, template_name, context)
 
-    def post(self, key):
-        DoubanAccount.get(key).delete()
+    def post(self, douban_id):
+        user = users.get_current_user()
+        account = DoubanAccount.get_authenticated_accounts(user, douban_id)
+        account.delete()
         return self.redirect('/account/douban/')

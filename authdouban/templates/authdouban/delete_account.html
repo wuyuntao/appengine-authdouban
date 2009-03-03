@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
 
-{% block delete_account %}
+{% block main %}
 <div class="delete-account">
 
+    {% if douban_account %}
     <div class="title">
         <h3>你确定要注销这个豆瓣帐号的授权吗？</h3>
     </div>
@@ -19,5 +20,11 @@
             </div>
         </form>
     </div>
+    {% else %}
+    <div class="title last">
+        <h3>没找到豆瓣 ID 为 {{ douban_id }} 的已授权帐户</h3>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}

@@ -19,7 +19,7 @@
         {% block douban_user_delete %}
         {% if douban_account %}
         <div class="douban-user-delete">
-            <a href="/account/douban/delete/{{ douban_account.key }}/" class="douban-user-delete">删除帐号</a>
+            <a href="/account/douban/delete/{{ douban_account.douban_id }}/" class="douban-user-delete">删除帐号</a>
         </div>
         {% endif %}
         {% endblock %}

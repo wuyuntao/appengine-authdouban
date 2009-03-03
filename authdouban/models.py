@@ -29,28 +29,20 @@ class DoubanAccount(db.Model):
         return new_account
 
     @classmethod
-    def get_authenticated_accounts(cls, user):
+    def get_authenticated_accounts(cls, user, douban_id=None):
         """ 显示最近创建的已授权的帐户 """
         query = cls.all() \
                    .filter('user = ', user) \
                    .filter('request_key = ', 'ALREADY_AUTHENTICATED') \
-                   .order('-created') \
-                   .fetch(settings.MAX_STORED_ACCOUNTS)
-        return query
+                   .order('-created')
+        if douban_id is None:
+            return query.fetch(settings.MAX_STORED_ACCOUNTS)
+        else:
+            return query.filter('douban_id = ', douban_id).get()
 
     def get_douban_profile(self):
-        """ 获取相应的豆瓣用户档案
-            如果超过了缓存的有效时限，更新档案
-
-        """
-        profile = DoubanProfile.get_by_douban_id(self.douban_id)
-        if profile.need_update():
-            service = douban_service()
-            # GData 不太支持 Unicode
-            entry = service.GetPeople('/people/%s' % \
-                                      self.douban_id.encode('utf-8'))
-            profile.update(entry)
-        return profile
+        """ 获取相应的豆瓣用户档案 """
+        return DoubanProfile.get_by_douban_id(self.douban_id)
     douban_profile = property(get_douban_profile)
 
     def set_request_key(self, key, secret):
@@ -110,8 +102,19 @@ class DoubanProfile(db.Model):
 
     @classmethod
     def get_by_douban_id(cls, douban_id):
-        """ 按豆瓣 ID 获取用户档案 """
-        return cls.all().filter('douban_id = ', douban_id).get()
+        """
+        按豆瓣 ID 获取用户档案
+        如果超过了缓存的有效时限，更新档案
+
+        """
+        profile = cls.all().filter('douban_id = ', douban_id).get()
+        if profile and profile.need_update():
+            service = douban_service()
+            # GData 不太支持 Unicode
+            entry = service.GetPeople('/people/%s' % \
+                                      douban_id.encode('utf-8'))
+            profile.update(entry)
+        return profile
 
     @classmethod
     def insert_or_update(cls, people_entry):
